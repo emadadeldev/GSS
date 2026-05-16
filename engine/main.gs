@@ -333,132 +333,85 @@ function ConvertText1(text, SplitLine = false, SplitNum = 0, BreakLine = "") {
 
 // دالة تقسيم النص حسب طول محدد
 function SplitText(input, breakc, len) {
-
-  var text = input + "";
-
+  SplitStringInput = "";
+  breaklinecodeInput = "";
+  SplitNumInput = "";
+  var SplitStringInput = input + "";
   var breaklinecodeInput = breakc + "";
 
-  var limit = len;
+  var SplitNumInput = len;
 
-  // استبدال كود السطر الجديد
   if (breaklinecodeInput == "$newline") {
     breaklinecodeInput = "\r\n";
   }
+  var SplitString = [{}];
 
-  var lines = [];
+  SplitString = SplitStringInput.split(/\r?\n/);
+  for (f = 0; f < SplitString.length; f++) {
+    finaltext = "";
+    text = SplitString[f];
+    var idealSplit = SplitNumInput,
+      lineCounter = 0,
+      lineIndex = 0,
+      theString = "",
+      lines = [""],
+      ch,
+      i;
 
-  var current = "";
+    for (i = 0; i < text.length; i++) {
+      ch = text[i];
+      if (ch == "[") {
+        var startIndex = i;
+        var endIndex = text.indexOf("]", i + 1);
 
-  // إضافة سطر جديد بعد التنظيف
-  function addLine(line) {
-    lines.push(line.trim());
-  }
-
-  var i = 0;
-
-  while (i < text.length) {
-
-    var ch = text[i];
-
-    // دالة لسحب النص حتى رمز النهاية
-    function grabUntil(endChar) {
-
-      var end = text.indexOf(endChar, i + 1);
-
-      if (end !== -1) {
-
-        current += text.substring(i, end + 1);
-
-        i = end;
-
-        return true;
-      }
-
-      return false;
-    }
-
-    // تجاهل النصوص بين الأقواس والمربعات والاقتباسات
-    if (ch == "[" && grabUntil("]")) { i++; continue; }
-    if (ch == '"' && grabUntil('"')) { i++; continue; }
-    if (ch == "(" && grabUntil(")")) { i++; continue; }
-
-    // معالجة الأكواد الخاصة
-    if (ch == "~") {
-
-      if (text[i + 1] == "~") {
-
-        var end = text.indexOf("~~", i + 2);
-
-        if (end !== -1) {
-
-          current += text.substring(i, end + 2);
-
-          i = end + 2;
-
-          continue;
-        }
-
-      } else {
-
-        var end = text.indexOf("~", i + 1);
-
-        if (end !== -1) {
-
-          current += text.substring(i, end + 1);
-
-          i = end;
-
+        if (endIndex !== -1) {
+          var section = text.substring(startIndex, endIndex + 1);
+          lines[lineIndex] += section;
+          i = endIndex;
+          // lineCounter += section.length;
           continue;
         }
       }
-    }
 
-    current += ch;
+      if (ch == "~") {
+        var startIndex = i;
+        var endIndex = text.indexOf("~", i + 1);
 
-    // إذا وصل الحد الأقصى للطول
-    if (current.length >= limit) {
-
-      var mid = Math.floor(current.length / 2);
-
-      var left = current.lastIndexOf(" ", mid);
-
-      var right = current.indexOf(" ", mid);
-
-      var splitPos;
-
-      // تحديد أفضل نقطة للتقسيم
-      if (left === -1 && right === -1) {
-
-        splitPos = mid;
-
-      } else if (left === -1) {
-
-        splitPos = right;
-
-      } else if (right === -1) {
-
-        splitPos = left;
-
-      } else {
-
-        splitPos = (mid - left <= right - mid) ? left : right;
+        if (endIndex !== -1) {
+          var section = text.substring(startIndex, endIndex + 1);
+          lines[lineIndex] += section;
+          i = endIndex;
+          // lineCounter += section.length;
+          continue;
+        }
       }
 
-      // إضافة السطر وتقسيم الباقي
-      addLine(current.substring(0, splitPos));
-
-      current = current.substring(splitPos + 1);
+      if (lineCounter >= idealSplit && ch === " ") {
+        ch = "";
+        lineCounter = -1;
+        lineIndex++;
+        lines.push("");
+      }
+      lines[lineIndex] += ch;
+      lineCounter++;
     }
-
-    i++;
+    setbreakline = false;
+    for (e = 0; e < lines.length; e++) {
+      if (setbreakline == false) {
+        finaltext = lines[e] + finaltext;
+        setbreakline = true;
+      } else {
+        if (breaklinecodeInput == "\r\n") {
+          finaltext = finaltext + breaklinecodeInput + lines[e];
+        } else {
+          finaltext = lines[e] + breaklinecodeInput + finaltext;
+        }
+      }
+    }
+    SplitString[f] = finaltext;
   }
-
-  // إضافة آخر سطر
-  if (current.length > 0) {
-    addLine(current);
-  }
-
-  return lines.join(breaklinecodeInput);
+  var theString = SplitString.join("\r\n");
+  return theString;
 }
 
 //تجربة سريعة في الخانة
